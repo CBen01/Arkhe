@@ -97,6 +97,8 @@ async function getCharacterIdsByUID(uid) {
                 }) || [];
 
 
+
+
                 return {
                     pos: equip.reliquary?.position,
                     icon,
@@ -109,6 +111,49 @@ async function getCharacterIdsByUID(uid) {
 
             }) || [];
 
+
+
+        const talents = {
+            normal: avatar.skillLevelMap?.[Object.keys(avatar.skillLevelMap)[0]] || 1,
+            skill: avatar.skillLevelMap?.[Object.keys(avatar.skillLevelMap)[1]] || 1,
+            burst: avatar.skillLevelMap?.[Object.keys(avatar.skillLevelMap)[2]] || 1
+        };
+
+        const baseStats = {
+            hp: avatar.fightPropMap?.["2000"] || 0,
+            atk: avatar.fightPropMap?.["2001"] || 0,
+            def: avatar.fightPropMap?.["2002"] || 0
+        };
+
+        const flatBonus = {
+            hp: avatar.fightPropMap?.["6"] || 0,
+            atk: avatar.fightPropMap?.["7"] || 0,
+            def: avatar.fightPropMap?.["8"] || 0
+        };
+
+        const percentBonus = {
+            hp: avatar.fightPropMap?.["1"] || 0,
+            atk: avatar.fightPropMap?.["4"] || 0,
+            def: avatar.fightPropMap?.["7"] || 0
+        };
+
+        const finalStats = {
+            hp: Math.round(baseStats.hp + flatBonus.hp + baseStats.hp * percentBonus.hp),
+            atk: Math.round(baseStats.atk + flatBonus.atk + baseStats.atk * percentBonus.atk),
+            def: Math.round(baseStats.def + flatBonus.def + baseStats.def * percentBonus.def)
+        };
+
+        const stats = {
+            base: baseStats,
+            flat: flatBonus,
+            percent: percentBonus,
+            em: avatar.fightPropMap?.["28"] || 0,
+            critRate: avatar.fightPropMap?.["20"] || 0,
+            critDmg: avatar.fightPropMap?.["22"] || 0,
+            er: avatar.fightPropMap?.["23"] || 0,
+            bonus: avatar.fightPropMap?.["40"] || 0, // Elemental DMG Bonus
+        };
+
         return {
             id,
             name,
@@ -119,7 +164,9 @@ async function getCharacterIdsByUID(uid) {
             weaponName,
             weaponLevel,
             weaponRefinement,
-            artifacts
+            artifacts,
+            stats,
+            talents
         };
     });
 

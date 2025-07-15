@@ -33,18 +33,35 @@ function UidSearch() {
     };
 
     const getStatType = stat => {
-      if (stat.startsWith("Crit Rate")) return "Crit Rate";
-      if (stat.startsWith("Crit DMG")) return "Crit DMG";
-      if (stat.startsWith("HP%")) return "Hp%";
-      if (stat.startsWith("HP")) return "HP";
-      if (stat.startsWith("ATK%")) return "ATK%";
-      if (stat.startsWith("ATK")) return "ATK";
-      if (stat.startsWith("EM")) return "EM";
-      if (stat.startsWith("ER%")) return "ER%";
-      if (stat.startsWith("DEF%")) return "DEF%";
-      if (stat.startsWith("DEF")) return "DEF";
-      const match = stat.match(/^([A-Za-z\s]+?)(?:\s|$)/);
-      return match ? match[1].trim() : stat;
+        if (stat.startsWith("Crit DMG")) return "Crit DMG";
+        if (stat.startsWith("Crit Rate")) return "Crit Rate";
+        if (stat.startsWith("HP%")) return "Hp%";
+        if (stat.startsWith("HP")) return "HP";
+        if (stat.startsWith("ATK%")) return "ATK%";
+        if (stat.startsWith("ATK")) return "ATK";
+        if (stat.startsWith("EM")) return "EM";
+        if (stat.startsWith("ER%")) return "ER%";
+        if (stat.startsWith("DEF%")) return "DEF%";
+        if (stat.startsWith("DEF")) return "DEF";
+        const match = stat.match(/^([A-Za-z\s]+?)(?:\s|$)/);
+        return match ? match[1].trim() : stat;
+    };
+
+
+    // Helper to render stat details
+    const renderStatBox = (label, value) => {
+        const lower = label.toLowerCase();
+        if (["hp", "atk", "def"].includes(lower)) {
+            return (
+                <Box>
+                    <Text fontWeight="bold">{Math.round(selectedCharacter.stats.base[lower])}</Text>
+                    <Text fontSize="xs" color="gray.500">
+                        {Math.round(selectedCharacter.stats.percent[lower])}  <span style={{ color: "#48BB78" }}>+ {Math.round(selectedCharacter.stats.base[lower] - selectedCharacter.stats.percent[lower])}</span>
+                    </Text>
+                </Box>
+            );
+        }
+        return <Text>{value}</Text>;
     };
 
     return (
@@ -155,52 +172,106 @@ function UidSearch() {
                     boxShadow="xl"
                     p={6}
                     mt={8}
-                    maxW="900px"
+                    maxW="780px"
                     w="100%"
                 >
-                    {/* Fejléc: portré + név + constellation */}
-                    <Flex align="center" mb={6} gap={6}>
-                        <Image
-                            src={selectedCharacter.icon}
-                            alt={GetName(selectedCharacter.name)}
-                            boxSize="100px"
-                            borderRadius="full"
-                            fallbackSrc="https://via.placeholder.com/100"
-                        />
-                        <Box>
-                            <Text fontSize="2xl" fontWeight="bold">
+                    <Flex direction={{ base: "column", md: "row" }} mb={6} gap={6} justify="space-between">
+                        {/* BAL OLDAL – Stat Panel */}
+                        <Box flex="1">
+                            <Heading size="sm" mb={2}>Stats</Heading>
+                            <Flex wrap="wrap" gap={3}>
+                                {[
+                                    ["HP", selectedCharacter.stats.hp],
+                                    ["ATK", selectedCharacter.stats.atk],
+                                    ["DEF", selectedCharacter.stats.def],
+                                    ["EM", Math.round(selectedCharacter.stats.em)],
+                                    ["Crit Rate", `${(selectedCharacter.stats.critRate * 100).toFixed(1)}%`],
+                                    ["Crit DMG", `${(selectedCharacter.stats.critDmg * 100).toFixed(1)}%`],
+                                    ["ER%", `${(selectedCharacter.stats.er * 100).toFixed(1)}%`],
+                                    ["Elemental Bonus", `${(selectedCharacter.stats.bonus * 100).toFixed(1)}%`]
+                                ].map(([label, value], i) => {
+                                    const statType = getStatType(label);
+                                    const isActive = hoveredStat && statType === hoveredStat;
+                                    const isInactive = hoveredStat && statType !== hoveredStat;
+                                    return (
+                                        <Box
+                                            key={i}
+                                            p={3}
+                                            bg={isActive ? "blue.100" : "white"}
+                                            borderRadius="lg"
+                                            fontSize="md"
+                                            minW="100px"
+                                            className={`stat-box char-stat ${statType}`}
+                                            onMouseEnter={() => setHoveredStat(statType)}
+                                            onMouseLeave={() => setHoveredStat(null)}
+                                            transition="all 0.2s"
+                                            boxShadow={isActive ? "0 4px 16px rgba(49,130,206,0.15)" : "0 2px 8px rgba(0,0,0,0.04)"}
+                                            border={isActive ? "2px solid #3182ce" : "1px solid #e2e8f0"}
+                                            opacity={isInactive ? 0.5 : 1}
+                                            filter={isInactive ? "blur(1px)" : "none"}
+                                            display="flex"
+                                            flexDirection="column"
+                                            alignItems="center"
+                                        >
+                                            <Text fontWeight="medium" color="gray.500" fontSize="sm" mb={1} textAlign="center" w="100%">
+                                                    {label}
+                                            </Text>
+                                            <Box fontWeight="bold" fontSize="xl" color={isActive ? "blue.700" : "gray.800"}>
+                                                {renderStatBox(label, value)}
+                                            </Box>
+                                        </Box>
+                                    );
+                                })}
+                            </Flex>
+
+                            {/* Talentek */}
+                            <Box mt={4}>
+                                <Heading size="sm" mb={2}>Talents</Heading>
+                                <Flex gap={4}>
+                                    <Text fontSize="sm">Normal: {selectedCharacter.talents.normal}</Text>
+                                    <Text fontSize="sm">Skill: {selectedCharacter.talents.skill}</Text>
+                                    <Text fontSize="sm">Burst: {selectedCharacter.talents.burst}</Text>
+                                </Flex>
+                            </Box>
+                        </Box>
+
+                        {/* JOBB OLDAL – Portré + Név + Fegyver */}
+                        <Flex direction="column" align="center">
+                            <Image
+                                src={selectedCharacter.icon}
+                                alt={selectedCharacter.name}
+                                boxSize="72px"
+                                borderRadius="full"
+                                fallbackSrc="https://via.placeholder.com/100"
+                                mb={3}
+                            />
+                            <Text fontSize="xl" fontWeight="bold">
                                 {GetName(selectedCharacter.name)}
                             </Text>
-                            <Text fontSize="md" color="gray.600">
-                                Lv. {selectedCharacter.level}
+                            <Text fontSize="sm" color="gray.600">
+                                Lv. {selectedCharacter.level} • C{selectedCharacter.constellation}
                             </Text>
-                            <Text fontSize="sm" color="gray.500">
-                                Constellation lvl: {selectedCharacter.constellation ?? 'N/A'}
-                            </Text>
-                        </Box>
+
+                            {/* Fegyver */}
+                            {selectedCharacter.weaponIcon && (
+                                <Flex align="center" gap={3} mt={3}>
+                                    <Image
+                                        src={selectedCharacter.weaponIcon}
+                                        alt="Weapon"
+                                        boxSize="36px"
+                                        fallbackSrc="https://via.placeholder.com/42"
+                                    />
+                                    <Box>
+                                        <Text fontSize="lg">{selectedCharacter.weaponName}</Text>
+                                        <Text fontSize="sm" color="gray.600">
+                                            Lv. {selectedCharacter.weaponLevel} • R{selectedCharacter.weaponRefinement}
+                                        </Text>
+                                    </Box>
+                                </Flex>
+                            )}
+                        </Flex>
                     </Flex>
 
-                    {/* Fegyver */}
-                    {selectedCharacter.weaponIcon && (
-                        <Flex align="center" gap={4} mb={4}>
-                            <Image
-                                src={selectedCharacter.weaponIcon}
-                                alt="Weapon"
-                                boxSize="50px"
-                                fallbackSrc="https://via.placeholder.com/50"
-                            />
-                            <Box>
-                                <Text fontWeight="bold" fontSize="md">Weapon</Text>
-                                <Text fontSize="sm">
-                                    {selectedCharacter.weaponName ?? 'Unknown'}
-                                </Text>
-                                <Text fontSize="sm" color="gray.600">
-                                    Lv. {selectedCharacter.weaponLevel ?? '?'}
-                                    {selectedCharacter.weaponRefinement ? ` • R${selectedCharacter.weaponRefinement}` : ''}
-                                </Text>
-                            </Box>
-                        </Flex>
-                    )}
 
                     {/* Artifacts */}
                     <Box mt={6}>
@@ -215,8 +286,8 @@ function UidSearch() {
                               border="2px solid"
                               borderColor={a.rarity === 5 ? "yellow.400" : "purple.400"}
                               borderRadius="lg"
-                              p={4}
-                              w="150px"
+                              p={3}
+                              w="120px"
                               boxShadow="lg"
                               transition="transform 0.2s, box-shadow 0.2s"
                               _hover={{
@@ -229,7 +300,7 @@ function UidSearch() {
                                 <Image
                                   src={a.icon}
                                   alt={`Artifact ${a.pos}`}
-                                  boxSize="48px"
+                                  boxSize="40px"
                                   fallbackSrc="https://via.placeholder.com/48"
                                 />
                                 <Text
@@ -311,7 +382,7 @@ function UidSearch() {
                         </Flex>
 
                         <Box mt={4}>
-                        <Text fontWeight="bold" fontSize="md" textAlign="center">
+                        <Text fontWeight="bold" fontSize="sm" textAlign="center">
                           Total CV: {
                             selectedCharacter.artifacts
                               ?.reduce((sum, a) => sum + (a.cv || 0), 0)
