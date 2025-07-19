@@ -1,6 +1,7 @@
 const axios = require('axios');
 const characters = require('../../shared/characters.json');
 const statMap = require('../../shared/statMap.json');
+const { estimateRolls } = require('../../utils/rolls');
 
 async function getPlayerStatsByUID(uid) {
     const url = `https://enka.network/api/uid/${uid}`;
@@ -85,16 +86,23 @@ async function getCharacterIdsByUID(uid) {
 
                 const substats = equip.flat.reliquarySubstats?.map(sub => {
                     const id = sub.appendPropId;
-                    const statName = statMap[id] || id || "Substat";
+                    const statName = statMap[id] || id;
                     const value = sub.statValue;
 
-                    // CV számítás: csak Crit Rate és Crit DMG esetén
+                    const rolls = estimateRolls(id, value);
+
                     if (id === "FIGHT_PROP_CRITICAL") cv += value * 2;
                     if (id === "FIGHT_PROP_CRITICAL_HURT") cv += value;
 
-
-                    return `${statName}: +${value}`;
+                    return {
+                        name: `${statName}`,
+                        rawValue: value,
+                        id,
+                        rolls
+                    };
                 }) || [];
+
+
 
 
 
@@ -113,11 +121,20 @@ async function getCharacterIdsByUID(uid) {
 
 
 
+        const skillLevels = avatar.skillLevelMap || {};
+        const extraLevels = avatar.proudSkillExtraLevelMap || {};
+
+        const skillKeys = Object.keys(skillLevels);
+        const normalId = skillKeys[0];
+        const skillId = skillKeys[1];
+        const burstId = skillKeys[2];
+
         const talents = {
-            normal: avatar.skillLevelMap?.[Object.keys(avatar.skillLevelMap)[0]] || 1,
-            skill: avatar.skillLevelMap?.[Object.keys(avatar.skillLevelMap)[1]] || 1,
-            burst: avatar.skillLevelMap?.[Object.keys(avatar.skillLevelMap)[2]] || 1
+            normal: (skillLevels[normalId] || 1) + (extraLevels[normalId] || 0),
+            skill:  (skillLevels[skillId]  || 1) + (extraLevels[skillId]  || 0),
+            burst:  (skillLevels[burstId]  || 1) + (extraLevels[burstId]  || 0)
         };
+
 
         const baseStats = {
             hp: avatar.fightPropMap?.["2000"] || 0,
