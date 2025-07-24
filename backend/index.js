@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const uidRoutes = require('./routes/uid');
+const wishesRoute = require('./routes/wishes');
 
 const app = express();
 const PORT = 3001;
@@ -9,6 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 // Route-ok
+app.use('/api/wishes', wishesRoute);
 app.use('/api/uid', uidRoutes);
 
 app.listen(PORT, () => {

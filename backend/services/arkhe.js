@@ -55,7 +55,7 @@ async function getCharacterIdsByUID(uid) {
         const icon = `https://enka.network/ui/UI_AvatarIcon_Side_${name.replace(/ /g, '')}.png`;
         const level = avatar.propMap?.["4001"]?.ival || "N/A";
         const constellation = avatar.talentIdList?.length || 0;
-
+        const SplashArt = `https://enka.network/ui/UI_Gacha_AvatarImg_${name.replace(/ /g, '')}.png`;
         // Fegyver
         const weapon = avatar.equipList?.find(e => e.flat?.itemType === "ITEM_WEAPON");
         const weaponIcon = weapon?.flat?.icon
@@ -175,6 +175,7 @@ async function getCharacterIdsByUID(uid) {
             id,
             name,
             icon,
+            SplashArt,
             level,
             constellation,
             weaponIcon,
