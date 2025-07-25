@@ -9,12 +9,19 @@ import {
     Box
 } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
+import weaponNames from "../../../shared/weaponNames.json";
+import { FaLock } from "react-icons/fa";
 
 function UidSearch() {
     const [uid, setUid] = useState('');
     const [result, setResult] = useState(null);
     const [selectedCharacter, setSelectedCharacter] = useState(null);
     const [hoveredStat, setHoveredStat] = useState(null);
+
+    const isFurina = selectedCharacter?.name === "Furina";
+    const swappedCharacter = isFurina
+        ? { ...selectedCharacter, C2: selectedCharacter.C6, C6: selectedCharacter.C2 }
+        : selectedCharacter;
 
     const handleSearch = async () => {
         const res = await fetch(`http://localhost:3001/api/uid/${uid}`);
@@ -45,6 +52,10 @@ function UidSearch() {
         const match = stat.match(/^([A-Za-z\s]+?)(?:\s|$)/);
         return match ? match[1].trim() : stat;
     };
+
+    function GetWeaponName(name) {
+        return weaponNames[name] || name;
+    }
 
     const fadeSlide = keyframes`
         0% { opacity: 0; transform: translateY(-20px); }
@@ -355,40 +366,147 @@ function UidSearch() {
 
                                 {/* Info box - top right */}
                                 <Flex
-                                    direction="column"
-                                    align="flex-end"
+                                    direction="row"
+                                    align="flex-start"
                                     zIndex={1}
                                     position="absolute"
                                     top={0}
                                     right={0}
-                                    w="auto"
+                                    w="100%"
                                     px={4}
                                     pt={4}
                                     bg="rgba(255,255,255,0.5)"
                                     borderRadius="md"
                                     backdropFilter="blur(4px)"
+                                    gap={8}
                                 >
-                                    <Text fontSize="2xl" fontWeight="bold" color="black">
-                                        {GetName(selectedCharacter.name)}
-                                    </Text>
-                                    <Text fontSize="lg" color="gray.700">
-                                        Lv. {selectedCharacter.level} • C{selectedCharacter.constellation}
-                                    </Text>
+                                    {/* Left Box: Character Info in its own Flex */}
+                                    <Flex
+                                        direction="column"
+                                        align="flex-start"
+                                        position="absolute"
+                                        top="0px"
+                                        left="0px"
+                                        bg="rgba(255,255,255,0.6)"
+                                        borderRadius="md"
+                                        backdropFilter="blur(6px)"
+                                        p={3}
+                                        zIndex={2}
+                                    >
+
+                                        <Text fontSize="2xl" fontWeight="bold" color="black">
+                                            {GetName(selectedCharacter.name)}
+                                        </Text>
+                                        <Text fontSize="lg" color="gray.700">
+                                            Lv. {selectedCharacter.level} • C{selectedCharacter.constellation}
+                                        </Text>
+                                    </Flex>
+                                    <Flex
+                                        direction="column"
+                                        align="flex-start"
+                                        position="absolute"
+                                        top="200px"
+                                        left="0px"
+                                        bg="rgba(255,255,255,0.6)"
+                                        borderRadius="md"
+                                        backdropFilter="blur(6px)"
+                                        p={3}
+                                        zIndex={2}
+                                    >
+
+
+                                        {["C1", "C2", "C4", "C6"].map((key, idx) => {
+                                            if (!swappedCharacter[key]) return null;
+                                            const conNum = parseInt(key.slice(1));
+                                            const isUnlocked = swappedCharacter.constellation >= conNum;
+                                            const elementColors = {
+                                                pyro: "red.400",
+                                                hydro: "blue.400",
+                                                anemo: "green.200",
+                                                dendro: "green.400",
+                                                cryo: "cyan.300",
+                                                electro: "purple.400"
+                                            };
+                                            const elementDarkBg = {
+                                                pyro: "red.900",
+                                                hydro: "blue.900",
+                                                anemo: "green.900",
+                                                dendro: "green.900",
+                                                cryo: "cyan.900",
+                                                electro: "purple.900"
+                                            };
+                                            const elementKey = swappedCharacter.element?.toLowerCase();
+                                            const borderColor = elementColors[elementKey] || "gray.400";
+                                            const bgColor = elementDarkBg[elementKey] || "gray.900";
+                                            return (
+                                                <Box
+                                                    key={key}
+                                                    border="3px solid"
+                                                    borderColor={borderColor}
+                                                    borderRadius="full"
+                                                    boxSize="40px"
+                                                    display="flex"
+                                                    alignItems="center"
+                                                    justifyContent="center"
+                                                    bg={bgColor}
+                                                    boxShadow={isUnlocked ? "md" : "none"}
+                                                    position="relative"
+                                                >
+                                                    <Image
+                                                        src={swappedCharacter[key]}
+                                                        alt={key}
+                                                        boxSize="32px"
+                                                        borderRadius="full"
+                                                        bg="transparent"
+                                                        objectFit="contain"
+                                                        opacity={isUnlocked ? 1 : 0.5}
+                                                    />
+                                                    {!isUnlocked && (
+                                                        <Box
+                                                            position="absolute"
+                                                            top="50%"
+                                                            left="50%"
+                                                            transform="translate(-50%, -50%)"
+                                                            zIndex={1}
+                                                        >
+                                                            <FaLock size={20} color={borderColor} />
+                                                        </Box>
+                                                    )}
+                                                </Box>
+                                                );
+                                            })}
+                                    </Flex>
+
+                                    {/* Right: Weapon Info */}
                                     {selectedCharacter.weaponIcon && (
-                                        <Flex align="center" gap={3} mt={3}>
-                                            <Image
-                                                src={selectedCharacter.weaponIcon}
-                                                alt="Weapon"
-                                                boxSize="48px"
-                                                fallbackSrc="https://via.placeholder.com/48"
-                                            />
-                                            <Box>
-                                                <Text fontSize="xl" color="gray.900">{selectedCharacter.weaponName}</Text>
-                                                <Text fontSize="md" color="gray.600">
-                                                    Lv. {selectedCharacter.weaponLevel} • R{selectedCharacter.weaponRefinement}
-                                                </Text>
-                                            </Box>
-                                        </Flex>
+                                        <Box
+                                            direction="column"
+                                            align="flex-end"
+                                            position="absolute"
+                                            maxW="200px"
+                                            top="0px"
+                                            right="0px" 
+                                            bg="rgba(255,255,255,0.6)"
+                                            borderRadius="md"
+                                            backdropFilter="blur(6px)"
+                                            p={3}
+                                            zIndex={2}
+                                        >
+                                            <Flex align="center" gap={3}>
+                                                <Image
+                                                    src={selectedCharacter.weaponIcon}
+                                                    alt="Weapon"
+                                                    boxSize="48px"
+                                                    fallbackSrc="https://via.placeholder.com/48"
+                                                />
+                                                <Box textAlign="right">
+                                                    <Text fontSize="l" color="gray.900">{GetWeaponName(selectedCharacter.weaponName)}</Text>
+                                                    <Text fontSize="md" color="gray.600">
+                                                        Lv. {selectedCharacter.weaponLevel} • R{selectedCharacter.weaponRefinement}
+                                                    </Text>
+                                                </Box>
+                                            </Flex>
+                                        </Box>
                                     )}
                                 </Flex>
                             </Box>

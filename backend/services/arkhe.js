@@ -1,5 +1,6 @@
 const axios = require('axios');
 const characters = require('../../shared/characters.json');
+const charactersElements = require('../../shared/CharacterElements.json');
 const statMap = require('../../shared/statMap.json');
 const { estimateRolls } = require('../../utils/rolls');
 
@@ -52,10 +53,18 @@ async function getCharacterIdsByUID(uid) {
     const mappedCharacters = data.avatarInfoList.map((avatar) => {
         const id = avatar.avatarId;
         const name = characters[id.toString()] || `Ismeretlen (${id})`;
+        const element = charactersElements[id.toString()] || "Unknown Element";
         const icon = `https://enka.network/ui/UI_AvatarIcon_Side_${name.replace(/ /g, '')}.png`;
         const level = avatar.propMap?.["4001"]?.ival || "N/A";
         const constellation = avatar.talentIdList?.length || 0;
         const SplashArt = `https://enka.network/ui/UI_Gacha_AvatarImg_${name.replace(/ /g, '')}.png`;
+
+        //cons
+        const C1 = `https://enka.network/ui/UI_Talent_S_${name.replace(/ /g, '')}_01.png`
+        const C2 = `https://enka.network/ui/UI_Talent_S_${name.replace(/ /g, '')}_02.png`
+        const C4 = `https://enka.network/ui/UI_Talent_S_${name.replace(/ /g, '')}_03.png`
+        const C6 = `https://enka.network/ui/UI_Talent_S_${name.replace(/ /g, '')}_04.png`
+
         // Fegyver
         const weapon = avatar.equipList?.find(e => e.flat?.itemType === "ITEM_WEAPON");
         const weaponIcon = weapon?.flat?.icon
@@ -174,10 +183,15 @@ async function getCharacterIdsByUID(uid) {
         return {
             id,
             name,
+            element,
             icon,
             SplashArt,
             level,
             constellation,
+            C1,
+            C2,
+            C4,
+            C6,
             weaponIcon,
             weaponName,
             weaponLevel,
