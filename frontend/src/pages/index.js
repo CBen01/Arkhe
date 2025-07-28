@@ -35,7 +35,10 @@ function UidSearch() {
                 return {...character, C2: character.C6, C6: character.C2};
             case "Shougun":
                 return {...character, C2: character.C4, C4: character.C2};
-            // Add more cases for other characters here
+            case "Hutao":
+                return {...character, C1: character.C4, C4: character.C2, C2: character.C1};
+            case "Momoka":
+                return {...character, C4: character.C6, C6: character.C4};
             default:
                 return character;
         }
@@ -51,7 +54,10 @@ function UidSearch() {
     const GetName = name => {
         if (name === "SkirkNew") {
             return "Skirk";
-        } else {
+        }   else if (name === "Momoka") {
+            return "Kirara";
+        }
+        else {
             return name;
         }
     };
