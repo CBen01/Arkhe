@@ -18,6 +18,16 @@ function UidSearch() {
     const [selectedCharacter, setSelectedCharacter] = useState(null);
     const [hoveredStat, setHoveredStat] = useState(null);
 
+    const statIcons = {
+        "HP": "/icons/Hp.png",
+        "ATK": "/icons/Atk.png",
+        "DEF": "/icons/Def.png",
+        "EM": "/icons/Em.png",
+        "Crit Rate": "/icons/CritRate.png",
+        "Crit DMG": "/icons/CritDmg.png",
+        "ER%": "/icons/Er.png",
+    };
+
     const elementColors = {
         anemo: '#549485',
         pyro: '#782d16',
@@ -94,61 +104,36 @@ function UidSearch() {
 
     function renderStatBox(label, value) {
         const lower = label.toLowerCase();
-        if (label === "HP") {
-            return (
-                <Box display="flex" flexDirection="column" alignItems="center">
-                    <Image
-                        src="/icons/Hp.png"
-                        alt="HP"
-                        boxSize="28px"
-                        mb={1}
-                    />
-                    <Text fontWeight="bold">{Math.round(selectedCharacter.stats.base[lower])}</Text>
-                    <Text fontSize="xs" color="gray.500">
-                        {Math.round(selectedCharacter.stats.percent[lower])}
-                        <span
-                            style={{color: "#48BB78"}}>+ {Math.round(selectedCharacter.stats.base[lower] - selectedCharacter.stats.percent[lower])}</span>
+        const isBreakdown = ["HP", "ATK", "DEF"].includes(label);
+        return (
+            <Flex align="center" justify="space-between" w="100%" mb={2}>
+                <Flex align="center">
+                    <Image src={statIcons[label]} alt={label} boxSize="22px" mr={2}/>
+                    <Text fontWeight="medium" color="white">{label}</Text>
+                </Flex>
+                <Box textAlign="right">
+                    <Text fontWeight="bold" color="white" fontSize="md">
+                        {isBreakdown ? Math.round(selectedCharacter.stats.base[lower]) : value}
                     </Text>
+                    {isBreakdown && (
+                        <Text fontSize="xs" color="white">
+                            {Math.round(selectedCharacter.stats.percent[lower])}
+                            <span style={{color: "#48BB78"}}>
+                                + {Math.round(selectedCharacter.stats.base[lower] - selectedCharacter.stats.percent[lower])}
+                            </span>
+                        </Text>
+                    )}
                 </Box>
-            );
-        }
-        if (label === "ATK") {
-            return (
-                <Box display="flex" flexDirection="column" alignItems="center">
-                    <Image
-                        src="/icons/Atk.png"
-                        alt="ATK"
-                        boxSize="28px"
-                        mb={1}
-                    />
-                    <Text fontWeight="bold">{Math.round(selectedCharacter.stats.base[lower])}</Text>
-                    <Text fontSize="xs" color="gray.500">
-                        {Math.round(selectedCharacter.stats.percent[lower])}
-                        <span
-                            style={{color: "#48BB78"}}>+ {Math.round(selectedCharacter.stats.base[lower] - selectedCharacter.stats.percent[lower])}</span>
-                    </Text>
-                </Box>
-            );
-        }
-        if (["def"].includes(lower)) {
-            return (
-                <Box>
-                    <Text fontWeight="bold">{Math.round(selectedCharacter.stats.base[lower])}</Text>
-                    <Text fontSize="xs" color="gray.500">
-                        {Math.round(selectedCharacter.stats.percent[lower])}
-                        <span
-                            style={{color: "#48BB78"}}>+ {Math.round(selectedCharacter.stats.base[lower] - selectedCharacter.stats.percent[lower])}</span>
-                    </Text>
-                </Box>
-            );
-        }
-        return <Text>{value}</Text>;
+            </Flex>
+        );
     }
 
     // Prepare swapped character and card background color
     const swappedCharacter = getSwappedCharacter(selectedCharacter);
     const elementKey = swappedCharacter?.element?.toLowerCase();
-    const cardBg = elementColors[elementKey] || 'white';
+    const cardBg = elementKey && elementColors[elementKey]
+           ? elementColors[elementKey] + "b3"
+           : "rgba(255,255,255,0.6)";
 
     return (
         <Box position="relative" minH="100vh" w="100vw" overflowX="hidden">
@@ -319,9 +304,9 @@ function UidSearch() {
                         >
                             <Flex direction={{base: "column", md: "row"}} mb={6} gap={6} justify="space-between">
                                 {/* Left: Stat Panel */}
-                                <Box flex="none" minW="260px" maxW="340px">
+                                <Box flex="none" minW="300px" maxW="360px">
                                     <Heading size="sm" mb={2}>Stats</Heading>
-                                    <Flex wrap="wrap" gap={3}>
+                                    <Box>
                                         {[
                                             ["HP", selectedCharacter.stats.hp],
                                             ["ATK", selectedCharacter.stats.atk],
@@ -331,42 +316,25 @@ function UidSearch() {
                                             ["Crit DMG", `${(selectedCharacter.stats.critDmg * 100).toFixed(1)}%`],
                                             ["ER%", `${(selectedCharacter.stats.er * 100).toFixed(1)}%`],
                                             ["Elemental Bonus", `${(selectedCharacter.stats.bonus * 100).toFixed(1)}%`]
-                                        ].map(([label, value], i) => {
-                                            const statType = getStatType(label);
-                                            const isActive = hoveredStat && statType === hoveredStat;
-                                            const isInactive = hoveredStat && statType !== hoveredStat;
-                                            return (
-                                                <Box
-                                                    key={i}
-                                                    p={3}
-                                                    bg={isActive ? "blue.100" : "white"}
-                                                    borderRadius="lg"
-                                                    fontSize="md"
-                                                    minW="100px"
-                                                    className={`stat-box char-stat ${statType}`}
-                                                    onMouseEnter={() => setHoveredStat(statType)}
-                                                    onMouseLeave={() => setHoveredStat(null)}
-                                                    transition="all 0.2s"
-                                                    boxShadow={isActive ? "0 4px 16px rgba(49,130,206,0.15)" : "0 2px 8px rgba(0,0,0,0.04)"}
-                                                    border={isActive ? "2px solid #3182ce" : "1px solid #e2e8f0"}
-                                                    opacity={isInactive ? 0.5 : 1}
-                                                    filter={isInactive ? "blur(1px)" : "none"}
-                                                    display="flex"
-                                                    flexDirection="column"
-                                                    alignItems="center"
-                                                >
-                                                    <Text fontWeight="medium" color="gray.500" fontSize="sm" mb={1}
-                                                          textAlign="center" w="100%">
-                                                        {label}
-                                                    </Text>
-                                                    <Box fontWeight="bold" fontSize="xl"
-                                                         color={isActive ? "blue.700" : "gray.800"}>
-                                                        {renderStatBox(label, value)}
-                                                    </Box>
-                                                </Box>
-                                            );
-                                        })}
-                                    </Flex>
+                                        ].map(([label, value], i) => (
+                                            <Box
+                                                key={i}
+                                                className={`stat-box char-stat ${getStatType(label)}`}
+                                                onMouseEnter={() => setHoveredStat(getStatType(label))}
+                                                onMouseLeave={() => setHoveredStat(null)}
+                                                transition="all 0.2s"
+                                                border={hoveredStat && getStatType(label) === hoveredStat ? "2px solid rgba(255,255,255,0.1)" : "1px solid rgba(255,255,255,0.1)"}
+                                                borderRadius="md"
+                                                bg={hoveredStat && getStatType(label) === hoveredStat ? "rgba(0,0,0,0.18)" : "rgba(255,255,255,0.1)"}
+                                                opacity={hoveredStat && getStatType(label) !== hoveredStat ? 0.5 : 1}
+                                                filter={hoveredStat && getStatType(label) !== hoveredStat ? "blur(1px)" : "none"}
+                                                mb={1}
+                                                p={2}
+                                            >
+                                                {renderStatBox(label, value)}
+                                            </Box>
+                                        ))}
+                                    </Box>
 
                                     {/* Talents */}
                                     <Box mt={4}>
@@ -385,7 +353,7 @@ function UidSearch() {
                                 <Box
                                     flex="1"
                                     position="relative"
-                                    minH="520px"
+                                    maxH="520px"
                                     display="flex"
                                     alignItems="flex-start"
                                     justifyContent="flex-end"
@@ -586,7 +554,6 @@ function UidSearch() {
                                             boxShadow="lg"
                                             transition="transform 0.2s, box-shadow 0.2s"
                                             _hover={{
-                                                transform: "scale(1.05)",
                                                 boxShadow: "xl",
                                             }}
                                         >
