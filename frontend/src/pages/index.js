@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useState, useRef} from "react";
 import {
     Flex,
     Input,
@@ -10,13 +10,28 @@ import {
 } from "@chakra-ui/react";
 import {keyframes} from "@emotion/react";
 import weaponNames from "../../../shared/weaponNames.json";
-import {FaLock} from "react-icons/fa";
+import {FaLock, FaArrowRight} from "react-icons/fa";
+import html2canvas from "html2canvas";
 
 function UidSearch() {
     const [uid, setUid] = useState('');
     const [result, setResult] = useState(null);
     const [selectedCharacter, setSelectedCharacter] = useState(null);
     const [hoveredStat, setHoveredStat] = useState(null);
+    const cardRef = useRef();
+
+    const handleDownloadCard = async () => {
+        if (!cardRef.current) return;
+        const canvas = await html2canvas(cardRef.current, {
+            backgroundColor: null,
+            useCORS: true,
+            scale: 2
+        });
+        const link = document.createElement("a");
+        link.download = `${selectedCharacter?.name || "character"}-card.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    };
 
     const statIcons = {
         "HP": "/icons/Hp.png",
@@ -199,8 +214,8 @@ function UidSearch() {
                                 maxW="300px"
                                 w="100%"
                             />
-                            <Button colorScheme="teal" onClick={handleSearch}>
-                                Search
+                            <Button colorScheme="blackAlpha" onClick={handleSearch}>
+                                <FaArrowRight />
                             </Button>
                         </Flex>
                     </Flex>
@@ -234,7 +249,7 @@ function UidSearch() {
                                         onClick={() =>
                                             setSelectedCharacter(selectedCharacter?.id === char.id ? null : char)
                                         }
-                                        bg={selectedCharacter?.id === char.id ? "blue.400" : "rgba(0,0,0,0.7)"}
+                                        bg={selectedCharacter?.id === char.id ? "blue.400" : "rgba(0,0,0,0.2)"}
                                         border="2px solid"
                                         borderColor="green.400"
                                         rounded="full"
@@ -268,7 +283,7 @@ function UidSearch() {
                                             position="absolute"
                                             bottom="-6px"
                                             right="-8px"
-                                            bg="gray.700"
+                                            bg="gray.900"
                                             color="white"
                                             px={2}
                                             py={0.5}
@@ -294,6 +309,7 @@ function UidSearch() {
                     {selectedCharacter && (
                         <Box
                             bg={cardBg}
+                            ref={cardRef}
                             border="2px solid rgba(0,0,0,0.37)"
                             borderRadius="xl"
                             boxShadow="xl"
@@ -829,6 +845,16 @@ function UidSearch() {
                                 </Box>
                             </Box>
                         </Box>
+                    )}
+                    {selectedCharacter && (
+                        <Button
+                            mt={2}
+                            colorScheme="blue"
+                            onClick={handleDownloadCard}
+                            leftIcon={<FaArrowRight />}
+                        >
+                            Download Card
+                        </Button>
                     )}
 
                     {result && !result.characters && (
